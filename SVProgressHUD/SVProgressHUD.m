@@ -69,7 +69,7 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
     
     static SVProgressHUD *sharedView;
 #if !defined(SV_APP_EXTENSIONS)
-    dispatch_once(&once, ^{ sharedView = [[self alloc] initWithFrame:[[[UIApplication sharedApplication] delegate] window].bounds]; });
+    dispatch_once(&once, ^{ sharedView = [[self alloc] initWithFrame:SVProgressHUD.getKeyWindow.bounds]; });
 #else
     dispatch_once(&once, ^{ sharedView = [[self alloc] initWithFrame:[[UIScreen mainScreen] bounds]]; });
 #endif
@@ -214,33 +214,57 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 #pragma mark - Show Methods
 
 + (void)show {
+    [[self sharedView] showWithStatus:nil];
+}
+
+- (void)show {
     [self showWithStatus:nil];
 }
 
 + (void)showWithMaskType:(SVProgressHUDMaskType)maskType {
-    SVProgressHUDMaskType existingMaskType = [self sharedView].defaultMaskType;
+    [[self sharedView] showWithMaskType:maskType];
+}
+
+- (void)showWithMaskType:(SVProgressHUDMaskType)maskType {
+    SVProgressHUDMaskType existingMaskType = self.defaultMaskType;
     [self setDefaultMaskType:maskType];
     [self show];
     [self setDefaultMaskType:existingMaskType];
 }
 
 + (void)showWithStatus:(NSString*)status {
+    [[self sharedView] showWithStatus:status];
+}
+
+- (void)showWithStatus:(NSString*)status {
     [self showProgress:SVProgressHUDUndefinedProgress status:status];
 }
 
 + (void)showWithStatus:(NSString*)status maskType:(SVProgressHUDMaskType)maskType {
-    SVProgressHUDMaskType existingMaskType = [self sharedView].defaultMaskType;
+    [[self sharedView] showWithStatus:status maskType:maskType];
+}
+
+- (void)showWithStatus:(NSString*)status maskType:(SVProgressHUDMaskType)maskType {
+    SVProgressHUDMaskType existingMaskType = self.defaultMaskType;
     [self setDefaultMaskType:maskType];
     [self showWithStatus:status];
     [self setDefaultMaskType:existingMaskType];
 }
 
 + (void)showProgress:(float)progress {
+    [[self sharedView] showProgress:progress];
+}
+
+- (void)showProgress:(float)progress {
     [self showProgress:progress status:nil];
 }
 
 + (void)showProgress:(float)progress maskType:(SVProgressHUDMaskType)maskType {
-    SVProgressHUDMaskType existingMaskType = [self sharedView].defaultMaskType;
+    [[self sharedView] showProgress:progress maskType:maskType];
+}
+
+- (void)showProgress:(float)progress maskType:(SVProgressHUDMaskType)maskType {
+    SVProgressHUDMaskType existingMaskType = self.defaultMaskType;
     [self setDefaultMaskType:maskType];
     [self showProgress:progress];
     [self setDefaultMaskType:existingMaskType];
@@ -251,7 +275,11 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 }
 
 + (void)showProgress:(float)progress status:(NSString*)status maskType:(SVProgressHUDMaskType)maskType {
-    SVProgressHUDMaskType existingMaskType = [self sharedView].defaultMaskType;
+    [[self sharedView] showProgress:progress status:status maskType:maskType];
+}
+
+- (void)showProgress:(float)progress status:(NSString*)status maskType:(SVProgressHUDMaskType)maskType {
+    SVProgressHUDMaskType existingMaskType = self.defaultMaskType;
     [self setDefaultMaskType:maskType];
     [self showProgress:progress status:status];
     [self setDefaultMaskType:existingMaskType];
@@ -261,12 +289,16 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 #pragma mark - Show, then automatically dismiss methods
 
 + (void)showInfoWithStatus:(NSString*)status {
-    [self showImage:[self sharedView].infoImage status:status];
+    [[self sharedView] showInfoWithStatus:status];
+}
+
+- (void)showInfoWithStatus:(NSString*)status {
+    [self showImage:self.infoImage status:status];
     
 #if TARGET_OS_IOS && __IPHONE_OS_VERSION_MAX_ALLOWED >= 100000
     if (@available(iOS 10.0, *)) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[self sharedView].hapticGenerator notificationOccurred:UINotificationFeedbackTypeWarning];
+            [self.hapticGenerator notificationOccurred:UINotificationFeedbackTypeWarning];
         });
     }
 #endif
@@ -280,12 +312,16 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 }
 
 + (void)showSuccessWithStatus:(NSString*)status {
-    [self showImage:[self sharedView].successImage status:status];
+    [[self sharedView] showSuccessWithStatus:status];
+}
+
+- (void)showSuccessWithStatus:(NSString*)status {
+    [self showImage:self.successImage status:status];
 
 #if TARGET_OS_IOS && __IPHONE_OS_VERSION_MAX_ALLOWED >= 100000
     if (@available(iOS 10, *)) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[self sharedView].hapticGenerator notificationOccurred:UINotificationFeedbackTypeSuccess];
+            [self.hapticGenerator notificationOccurred:UINotificationFeedbackTypeSuccess];
         });
     }
 #endif
@@ -306,20 +342,44 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 #endif
 }
 
-+ (void)showErrorWithStatus:(NSString*)status {
-    [self showImage:[self sharedView].errorImage status:status];
+- (void)showSuccessWithStatus:(NSString*)status maskType:(SVProgressHUDMaskType)maskType {
+    SVProgressHUDMaskType existingMaskType = self.defaultMaskType;
+    [self setDefaultMaskType:maskType];
+    [self showSuccessWithStatus:status];
+    [self setDefaultMaskType:existingMaskType];
     
 #if TARGET_OS_IOS && __IPHONE_OS_VERSION_MAX_ALLOWED >= 100000
     if (@available(iOS 10.0, *)) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[self sharedView].hapticGenerator notificationOccurred:UINotificationFeedbackTypeError];
+            [self.hapticGenerator notificationOccurred:UINotificationFeedbackTypeSuccess];
         });
     }
 #endif
 }
 
++ (void)showErrorWithStatus:(NSString*)status {
+    [[self sharedView] showErrorWithStatus:status];
+}
+
+- (void)showErrorWithStatus:(NSString*)status {
+    [self showImage:self.errorImage status:status];
+    
+#if TARGET_OS_IOS && __IPHONE_OS_VERSION_MAX_ALLOWED >= 100000
+    if (@available(iOS 10.0, *)) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.hapticGenerator notificationOccurred:UINotificationFeedbackTypeError];
+        });
+    }
+#endif
+}
+
+
 + (void)showErrorWithStatus:(NSString*)status maskType:(SVProgressHUDMaskType)maskType {
-    SVProgressHUDMaskType existingMaskType = [self sharedView].defaultMaskType;
+    [[self sharedView] showErrorWithStatus:status maskType:maskType];
+}
+
+- (void)showErrorWithStatus:(NSString*)status maskType:(SVProgressHUDMaskType)maskType {
+    SVProgressHUDMaskType existingMaskType = self.defaultMaskType;
     [self setDefaultMaskType:maskType];
     [self showErrorWithStatus:status];
     [self setDefaultMaskType:existingMaskType];
@@ -327,19 +387,27 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 #if TARGET_OS_IOS && __IPHONE_OS_VERSION_MAX_ALLOWED >= 100000
     if (@available(iOS 10.0, *)) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[self sharedView].hapticGenerator notificationOccurred:UINotificationFeedbackTypeError];
+            [self.hapticGenerator notificationOccurred:UINotificationFeedbackTypeError];
         });
     }
 #endif
 }
 
 + (void)showImage:(UIImage*)image status:(NSString*)status {
-    NSTimeInterval displayInterval = [self displayDurationForString:status];
-    [[self sharedView] showImage:image status:status duration:displayInterval];
+    [[self sharedView] showImage:image status:status];
+}
+
+- (void)showImage:(UIImage*)image status:(NSString*)status {
+    NSTimeInterval displayInterval = [SVProgressHUD displayDurationForString:status];
+    [self showImage:image status:status duration:displayInterval];
 }
 
 + (void)showImage:(UIImage*)image status:(NSString*)status maskType:(SVProgressHUDMaskType)maskType {
-    SVProgressHUDMaskType existingMaskType = [self sharedView].defaultMaskType;
+    [[self sharedView] showImage:image status:status maskType:maskType];
+}
+
+- (void)showImage:(UIImage*)image status:(NSString*)status maskType:(SVProgressHUDMaskType)maskType {
+    SVProgressHUDMaskType existingMaskType = self.defaultMaskType;
     [self setDefaultMaskType:maskType];
     [self showImage:image status:status];
     [self setDefaultMaskType:existingMaskType];
@@ -362,17 +430,24 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 }
 
 + (void)dismissWithCompletion:(SVProgressHUDDismissCompletion)completion {
+    [[self sharedView] dismissWithCompletion:completion];
+}
+
+- (void)dismissWithCompletion:(SVProgressHUDDismissCompletion)completion {
     [self dismissWithDelay:0.0 completion:completion];
 }
 
 + (void)dismissWithDelay:(NSTimeInterval)delay {
+    [[self sharedView] dismissWithDelay:delay];
+}
+
+- (void)dismissWithDelay:(NSTimeInterval)delay {
     [self dismissWithDelay:delay completion:nil];
 }
 
 + (void)dismissWithDelay:(NSTimeInterval)delay completion:(SVProgressHUDDismissCompletion)completion {
     [[self sharedView] dismissWithDelay:delay completion:completion];
 }
-
 
 #pragma mark - Offset
 
@@ -651,7 +726,11 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
     double animationDuration = 0.0;
 
 #if !defined(SV_APP_EXTENSIONS) && TARGET_OS_IOS
-    self.frame = [[[UIApplication sharedApplication] delegate] window].bounds;
+    if (self.containerView) {
+        self.frame = self.containerView.bounds;
+    } else {
+        self.frame = SVProgressHUD.getKeyWindow.bounds;
+    }
     UIInterfaceOrientation orientation = UIApplication.sharedApplication.statusBarOrientation;
 #elif !defined(SV_APP_EXTENSIONS) && !TARGET_OS_IOS
     self.frame= [UIApplication sharedApplication].keyWindow.bounds;
@@ -1035,7 +1114,7 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
                     
                     // Tell the rootViewController to update the StatusBar appearance
 #if !defined(SV_APP_EXTENSIONS) && TARGET_OS_IOS
-                    UIViewController *rootController = [[UIApplication sharedApplication] keyWindow].rootViewController;
+                    UIViewController *rootController = SVProgressHUD.getKeyWindow.rootViewController;
                     [rootController setNeedsStatusBarAppearanceUpdate];
 #endif
                     
@@ -1179,6 +1258,34 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
     return [self sharedView].backgroundView.alpha > 0.0f;
 }
 
++ (UIWindow *)getKeyWindow {
+    UIWindow *keyWindow;
+    if (@available(iOS 13.0, *)) {
+        if ([UIApplication.sharedApplication.delegate respondsToSelector:@selector(window)]) {
+            keyWindow = UIApplication.sharedApplication.delegate.window;
+        }
+        if (keyWindow == nil) {
+            for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
+                if (scene.activationState == UISceneActivationStateForegroundActive &&
+                    [scene isKindOfClass:UIWindowScene.class]) {
+                    UIWindowScene *windowScene = (UIWindowScene *)scene;
+                    for (UIWindow *window in windowScene.windows) {
+                        if (window.isKeyWindow) {
+                            keyWindow = window;
+                            break;
+                        }
+                    }
+                }
+                if (keyWindow != nil) {
+                    break;
+                }
+            }
+        }
+    } else {
+        keyWindow = UIApplication.sharedApplication.delegate.window;
+    }
+    return keyWindow;
+}
 
 #pragma mark - Getters
 
@@ -1226,8 +1333,11 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
     
     // Update frames
 #if !defined(SV_APP_EXTENSIONS)
-    CGRect windowBounds = [[[UIApplication sharedApplication] delegate] window].bounds;
-    _controlView.frame = windowBounds;
+    if (self.containerView) {
+        _controlView.frame = self.containerView.bounds;
+    } else {
+        _controlView.frame = SVProgressHUD.getKeyWindow.bounds;
+    }
 #else
     _controlView.frame = [UIScreen mainScreen].bounds;
 #endif
@@ -1543,6 +1653,45 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 
 - (void)setMaxSupportedWindowLevel:(UIWindowLevel)maxSupportedWindowLevel {
     if (!_isInitializing) _maxSupportedWindowLevel = maxSupportedWindowLevel;
+}
+
+#pragma mark - Instance Methods
++ (instancetype)hudWithContainer:(UIView *)container {
+    SVProgressHUD *instance = [[SVProgressHUD alloc] initWithFrame:container.bounds];
+    instance.containerView = container;
+    
+    // setup property from shareView
+    SVProgressHUD *sharedView = [self sharedView];
+    
+    instance.defaultStyle = sharedView.defaultStyle;
+    instance.defaultMaskType = sharedView.defaultMaskType;
+    instance.defaultAnimationType = sharedView.defaultAnimationType;
+    instance.minimumSize = sharedView.minimumSize;
+    instance.ringThickness = sharedView.ringThickness;
+    instance.ringRadius = sharedView.ringRadius;
+    instance.ringNoTextRadius = sharedView.ringNoTextRadius;
+    instance.cornerRadius = sharedView.cornerRadius;
+    instance.hudView.layer.borderColor = sharedView.hudView.layer.borderColor;
+    instance.hudView.layer.borderWidth = sharedView.hudView.layer.borderWidth;
+    instance.font = sharedView.font;
+    instance.foregroundColor = sharedView.foregroundColor;
+    instance.foregroundImageColor = sharedView.foregroundImageColor;
+    instance.backgroundColor = sharedView.backgroundColor;
+    instance.hudViewCustomBlurEffect = sharedView.hudViewCustomBlurEffect;
+    instance.backgroundLayerColor = sharedView.backgroundLayerColor;
+    instance.imageViewSize = sharedView.imageViewSize;
+    instance.shouldTintImages = sharedView.shouldTintImages;
+    instance.viewForExtension = sharedView.viewForExtension;
+    instance.graceTimeInterval = sharedView.graceTimeInterval;
+    instance.minimumDismissTimeInterval = sharedView.minimumDismissTimeInterval;
+    instance.maximumDismissTimeInterval = sharedView.maximumDismissTimeInterval;
+    instance.fadeInAnimationDuration = sharedView.fadeInAnimationDuration;
+    instance.fadeOutAnimationDuration = sharedView.fadeOutAnimationDuration;
+    instance.maxSupportedWindowLevel = sharedView.maxSupportedWindowLevel;
+    instance.hapticsEnabled = sharedView.hapticsEnabled;
+    instance.motionEffectEnabled = sharedView.motionEffectEnabled;
+    
+    return instance;
 }
 
 @end

@@ -148,5 +148,26 @@ typedef void (^SVProgressHUDDismissCompletion)(void);
 
 + (NSTimeInterval)displayDurationForString:(nullable NSString*)string;
 
+#pragma mark - Instance Methods
++ (nonnull instancetype)hudWithContainer:(nonnull UIView *)container;
+
+- (void)show;
+- (void)showWithStatus:(nullable NSString*)status;
+- (void)showProgress:(float)progress;
+
++ (void)showProgress:(float)progress status:(nullable NSString*)status;
+
++ (void)setStatus:(nullable NSString*)status; // change the HUD loading status while it's showing
+
+// stops the activity indicator, shows a glyph + status, and dismisses the HUD a little bit later
+- (void)showInfoWithStatus:(nullable NSString*)status;
+- (void)showSuccessWithStatus:(nullable NSString*)status;
+- (void)showErrorWithStatus:(nullable NSString*)status;
+
+- (void)dismiss;
+- (void)dismissWithCompletion:(nullable SVProgressHUDDismissCompletion)completion;
+- (void)dismissWithDelay:(NSTimeInterval)delay;
+- (void)dismissWithDelay:(NSTimeInterval)delay completion:(nullable SVProgressHUDDismissCompletion)completion;
+
 @end
 
