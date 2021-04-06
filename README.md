@@ -1,3 +1,8 @@
+# 0. Addition
+
+* add instance support
+* fix crash bug for UIScene on iOS 13
+
 # SVProgressHUD
 
 ![Pod Version](https://img.shields.io/cocoapods/v/SVProgressHUD.svg?style=flat)
